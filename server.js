@@ -33,7 +33,7 @@ const deleteFiles = (files, callback) => {
   });
 }
 
-app.post('/', (req, res) => {
+app.post('/python-ast', (req, res) => {
   if (!req.body.python) {
     res.status(400).send('Bad request, no data sent.');
   }
@@ -83,6 +83,10 @@ app.post('/', (req, res) => {
     });
   }
 });
+
+app.get('*', (req, res) => {
+  res.status(404);
+})
 
 app.listen(port, () => {
   console.log("== Server listening on port", port);
