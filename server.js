@@ -33,43 +33,75 @@ const deleteFiles = (files, callback) => {
   });
 }
 
+// serve static file p3.png 
+app.get('/python-ast', (req, res) => {
+  res.sendFile(path.resolve(path.resolve(__dirname, `./python-ast/tests/example_output/p3.png`)));
+})
+
+// serve generated png file labeled with "code"
 app.get('/python-ast/:code', (req, res) => {
   res.sendFile(path.resolve(path.resolve(__dirname,`./python-ast/images/${req.params.code}.png`)));
 });
 
+// generate png file given input python program and return "code" to access it with
 app.post('/python-ast', (req, res) => {
   if (!req.body.python) {
     res.status(400).send('Bad request, no data sent.');
   }
   else {
     let code = uuidv4();
-    fs.writeFile(`${code}.py`, req.body.python, (err) => {
+    fs.writeFile(`./python-ast-staging/${code}.py`, req.body.python, (err) => {
       if (err) {
         console.error(err);
         res.status(500).send(`Error writing ${code}.py to disk.`);
       }
       else {
-        exec(`./python-ast/parse < ./${code}.py > ./${code}.gv`, (err, stdout, stderr) => {
+        exec(`./python-ast/parse < ./python-ast-staging/${code}.py > ./python-ast-staging/${code}.gv`, (err, stdout, stderr) => {
           if (err) {
             console.error(err);
             res.status(500).send(`Error running parse on ${code}.py`);
-          }
-          else {
-            exec(`dot -Tpng -o./python-ast/images/${code}.png ./${code}.gv`, (err, stdout, stderr) => {
+            // cleanup .gv and .py files
+            deleteFiles([`./python-ast-staging/${code}.py`, `python-ast-staging/${code}.gv`], (err) => {
               if (err) {
                 console.error(err);
-                res.status(500).send(`Error converting ${code}.gv to ${code}.png`);
+                res.status(500).send(`Error deleteing ${code}.py and/or ${code}.gv`);
               }
-              else {
-                res.status(200).send(JSON.stringify({ code }));
-                deleteFiles([`${code}.py`, `${code}.gv`], (err) => {
+            })
+          }
+          else {
+            // check size of generated gv file
+            let fileSize = fs.statSync(`./python-ast-staging/${code}.gv`).size;
+        
+            // only generate png if gv file isn't empty
+            if (fileSize > 0) {
+              exec(`dot -Tpng -o./python-ast-images/${code}.png ./python-ast-staging/${code}.gv`, (err, stdout, stderr) => {
+                if (err) {
+                  console.error(err);
+                  res.status(500).send(`Error converting ${code}.gv to ${code}.png`);
+                }
+                else {
+                  res.status(200).send(JSON.stringify({ code }));
+                }
+                // cleanup .gv and .py files
+                deleteFiles([`./python-ast-staging/${code}.py`, `python-ast-staging/${code}.gv`], (err) => {
                   if (err) {
                     console.error(err);
                     res.status(500).send(`Error deleteing ${code}.py and/or ${code}.gv`);
                   }
                 })
-              }
-            });
+              });
+            }
+            // if gv was empty that means the input code had invalid syntax
+            else {
+              res.status(500).send(`Invalid python syntax.`);
+              // cleanup .gv and .py files
+              deleteFiles([`./python-ast-staging/${code}.py`, `python-ast-staging/${code}.gv`], (err) => {
+                if (err) {
+                  console.error(err);
+                  res.status(500).send(`Error deleteing ${code}.py and/or ${code}.gv`);
+                }
+              })
+            }
           }
         });
       }
@@ -82,6 +114,7 @@ app.get('*', (req, res) => {
   res.status(404);
 });
 
+// only listen for requests on localhost
 app.listen(port, 'localhost', () => {
   console.info(`== Server listening on port ${port}`);
 });
