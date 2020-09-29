@@ -40,7 +40,7 @@ app.get('/python-ast', (req, res) => {
 
 // serve generated png file labeled with "code"
 app.get('/python-ast/:code', (req, res) => {
-  res.sendFile(path.resolve(path.resolve(__dirname,`./python-ast/images/${req.params.code}.png`)));
+  res.sendFile(path.resolve(path.resolve(__dirname,`./python-ast-images/${req.params.code}.png`)));
 });
 
 // generate png file given input python program and return "code" to access it with
