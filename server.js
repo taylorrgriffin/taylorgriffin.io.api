@@ -35,7 +35,7 @@ const deleteFiles = (files, callback) => {
 
 // serve static file p3.png 
 app.get('/python-ast', (req, res) => {
-  res.sendFile(path.resolve(path.resolve(__dirname, `./python-ast/tests/example_output/p3.png`)));
+  res.sendFile(path.resolve(path.resolve(__dirname, `./python-ast/tests/example_output/p1.simple.png`)));
 })
 
 // serve generated png file labeled with "code"
@@ -56,7 +56,7 @@ app.post('/python-ast', (req, res) => {
         res.status(500).send(`Error writing ${code}.py to disk.`);
       }
       else {
-        exec(`./python-ast/parse < ./python-ast-staging/${code}.py > ./python-ast-staging/${code}.gv`, (err, stdout, stderr) => {
+        exec(`./python-ast/parse < ./python-ast-staging/${code}.py > ./python-ast-staging/${code}.gv --color dark --dir horizontal`, (err, stdout, stderr) => {
           if (err) {
             console.error(err);
             res.status(500).send(`Error running parse on ${code}.py`);
@@ -74,6 +74,9 @@ app.post('/python-ast', (req, res) => {
         
             // only generate png if gv file isn't empty
             if (fileSize > 0) {
+              if (!fs.existsSync('./python-ast-images')) {
+                fs.mkdirSync('./python-ast-images')
+              }
               exec(`dot -Tpng -o./python-ast-images/${code}.png ./python-ast-staging/${code}.gv`, (err, stdout, stderr) => {
                 if (err) {
                   console.error(err);
