@@ -129,6 +129,6 @@ app.get('*', (req, res) => {
 });
 
 // only listen for requests on localhost
-app.listen(port, 'localhost', () => {
+app.listen(port, () => {
   console.info(`== Server listening on port ${port}`);
 });
