@@ -44,6 +44,10 @@ cron.schedule('59 59 23 * * *', () => {
   });
 });
 
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+})
+
 // serve static file p3.png 
 app.get('/python-ast', (req, res) => {
   res.sendFile(path.resolve(path.resolve(__dirname, `./python-ast/tests/example_output/p1.simple.png`)));
