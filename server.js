@@ -1,6 +1,8 @@
 const fs = require('fs');
 const cors = require('cors');
 const path = require('path');
+const rimraf = require('rimraf');
+const cron = require('node-cron');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
@@ -32,6 +34,15 @@ const deleteFiles = (files, callback) => {
     });
   });
 }
+
+// delete all generated ASTs at 11:59:59 pm every night
+cron.schedule('59 59 23 * * *', () => {
+  rimraf('./python-ast-images', (error) => {
+    if (error) {
+      console.error(`Error cleaning up ASTs: ${error}`);
+    }
+  });
+});
 
 // serve static file p3.png 
 app.get('/python-ast', (req, res) => {
