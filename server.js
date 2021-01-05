@@ -1,12 +1,15 @@
 const fs = require('fs');
 const cors = require('cors');
 const path = require('path');
+const https = require('https');
 const rimraf = require('rimraf');
 const cron = require('node-cron');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
 const { exec } = require('child_process');
+
+const { apiKey, certPassphrase } = require('./secrets.json');
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -35,6 +38,7 @@ const deleteFiles = (files, callback) => {
   });
 }
 
+// TODO: remove this, will use s3 eventually
 // delete all generated ASTs at 11:59:59 pm every night
 cron.schedule('59 59 23 * * *', () => {
   rimraf('./python-ast-images', (error) => {
@@ -46,20 +50,35 @@ cron.schedule('59 59 23 * * *', () => {
 
 app.get('/', (req, res) => {
   res.status(200).send('OK');
-})
+});
+
+app.get('/health_check', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// middleware to make sure /api endpoints always require valid API key
+app.use('/api', (req, res, next) => {
+  if (req.query && req.query.apiKey == apiKey) {
+    next();
+  }
+  else {
+    res.status(401).send('Invalid API key sent. See documentation for more information.');
+  }
+});
 
 // serve static file p3.png 
-app.get('/python-ast', (req, res) => {
+app.get('/api/python-ast', (req, res) => {
   res.sendFile(path.resolve(path.resolve(__dirname, `./python-ast/tests/example_output/p1.simple.png`)));
 })
 
 // serve generated png file labeled with "code"
-app.get('/python-ast/:code', (req, res) => {
+app.get('/api/python-ast/:code', (req, res) => {
   res.sendFile(path.resolve(path.resolve(__dirname,`./python-ast-images/${req.params.code}.png`)));
 });
 
+// TODO: refactor this to use a class astGenerator and use oop?
 // generate png file given input python program and return "code" to access it with
-app.post('/python-ast', (req, res) => {
+app.post('/api/python-ast', (req, res) => {
   if (!req.body.python) {
     res.status(400).send('Bad request, no data sent.');
   }
@@ -132,7 +151,12 @@ app.get('*', (req, res) => {
   res.status(404);
 });
 
-// only listen for requests on localhost
-app.listen(port, () => {
+const httpsServer = https.createServer({
+  key: fs.readFileSync('./cert/key.pem'),
+  cert: fs.readFileSync('./cert/cert.pem'),
+  passphrase: certPassphrase
+}, app);
+
+httpsServer.listen(port, () => {
   console.info(`== Server listening on port ${port}`);
 });
