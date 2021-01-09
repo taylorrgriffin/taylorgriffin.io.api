@@ -2,17 +2,28 @@ const fs = require('fs');
 const cors = require('cors');
 const path = require('path');
 const https = require('https');
-const rimraf = require('rimraf');
-const cron = require('node-cron');
+// const rimraf = require('rimraf');
+// const cron = require('node-cron');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
 const { exec } = require('child_process');
 
-const { apiKey, certPassphrase } = require('./secrets.json');
+const { apiKey } = require('./secrets.json');
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 9000;
+
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/cert.pem', 'utf8');
+const ca = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/chain.pem', 'utf8');
+
+
+const credentials = {
+	key: privateKey,
+	cert: certificate,
+	ca: ca
+};
 
 // middleware config
 app.use(
@@ -40,13 +51,13 @@ const deleteFiles = (files, callback) => {
 
 // TODO: remove this, will use s3 eventually
 // delete all generated ASTs at 11:59:59 pm every night
-cron.schedule('59 59 23 * * *', () => {
-  rimraf('./python-ast-images', (error) => {
-    if (error) {
-      console.error(`Error cleaning up ASTs: ${error}`);
-    }
-  });
-});
+// cron.schedule('59 59 23 * * *', () => {
+//   rimraf('./python-ast-images', (error) => {
+//     if (error) {
+//       console.error(`Error cleaning up ASTs: ${error}`);
+//     }
+//   });
+// });
 
 app.get('/', (req, res) => {
   res.status(200).send('OK');
@@ -151,12 +162,8 @@ app.get('*', (req, res) => {
   res.status(404);
 });
 
-const httpsServer = https.createServer({
-  key: fs.readFileSync('./cert/key.pem'),
-  cert: fs.readFileSync('./cert/cert.pem'),
-  passphrase: certPassphrase
-}, app);
+const server = https.createServer(credentials, app);
 
-httpsServer.listen(port, () => {
+server.listen(port, () => {
   console.info(`== Server listening on port ${port}`);
 });
