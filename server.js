@@ -2,8 +2,6 @@ const fs = require('fs');
 const cors = require('cors');
 const path = require('path');
 const https = require('https');
-// const rimraf = require('rimraf');
-// const cron = require('node-cron');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
@@ -14,10 +12,10 @@ const { apiKey } = require('./secrets.json');
 const app = express();
 const port = process.env.PORT || 9000;
 
+// import ssl tls credentials
 const privateKey = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/privkey.pem', 'utf8');
 const certificate = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/cert.pem', 'utf8');
 const ca = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/chain.pem', 'utf8');
-
 
 const credentials = {
 	key: privateKey,
@@ -25,7 +23,7 @@ const credentials = {
 	ca: ca
 };
 
-// middleware config
+// standard middleware config
 app.use(
   bodyParser.urlencoded({
       extended: true,
@@ -49,25 +47,17 @@ const deleteFiles = (files, callback) => {
   });
 }
 
-// TODO: remove this, will use s3 eventually
-// delete all generated ASTs at 11:59:59 pm every night
-// cron.schedule('59 59 23 * * *', () => {
-//   rimraf('./python-ast-images', (error) => {
-//     if (error) {
-//       console.error(`Error cleaning up ASTs: ${error}`);
-//     }
-//   });
-// });
-
+// just give em a good ol' 200 at the root
 app.get('/', (req, res) => {
   res.status(200).send('OK');
 });
 
+// health check endpoint to ensure api is online
 app.get('/health_check', (req, res) => {
   res.status(200).send('OK');
 });
 
-// middleware to make sure /api endpoints always require valid API key
+// intercept /api calls and ensure they supply valid API key
 app.use('/api', (req, res, next) => {
   if (req.query && req.query.apiKey == apiKey) {
     next();
@@ -77,14 +67,18 @@ app.use('/api', (req, res, next) => {
   }
 });
 
-// serve static file p3.png 
-app.get('/api/python-ast', (req, res) => {
-  res.sendFile(path.resolve(path.resolve(__dirname, `./python-ast/tests/example_output/p1.simple.png`)));
-})
+// serve generated ast pngs
+app.get('/api/python-ast/:code?', (req, res) => {  
+  // each generated png is labeled with a unique code
+  let code = req.params.code;
 
-// serve generated png file labeled with "code"
-app.get('/api/python-ast/:code', (req, res) => {
-  res.sendFile(path.resolve(path.resolve(__dirname,`./python-ast-images/${req.params.code}.png`)));
+  // if no code is sent, serve default static file
+    if (!code) {
+      res.sendFile(path.resolve(path.resolve(__dirname, `./python-ast/tests/example_output/p1.simple.png`)));
+    }
+    else {
+      res.sendFile(path.resolve(path.resolve(__dirname,`./python-ast-images/${req.params.code}.png`)));
+    }
 });
 
 // TODO: refactor this to use a class astGenerator and use oop?
