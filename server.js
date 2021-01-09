@@ -1,6 +1,7 @@
 const fs = require('fs');
 const cors = require('cors');
 const path = require('path');
+const http = require('http');
 const https = require('https');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
@@ -10,18 +11,8 @@ const { exec } = require('child_process');
 const { apiKey } = require('./secrets.json');
 
 const app = express();
+const env = process.env.ENV || "dev";
 const port = process.env.PORT || 9000;
-
-// import ssl tls credentials
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/privkey.pem', 'utf8');
-const certificate = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/cert.pem', 'utf8');
-const ca = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/chain.pem', 'utf8');
-
-const credentials = {
-	key: privateKey,
-	cert: certificate,
-	ca: ca
-};
 
 // standard middleware config
 app.use(
@@ -156,7 +147,27 @@ app.get('*', (req, res) => {
   res.status(404);
 });
 
-const server = https.createServer(credentials, app);
+// TODO: maybe turn this into a factory later?
+var server;
+if (env === "dev") {
+  // use http in development
+  server = http.createServer(app);
+}
+else {
+  // import ssl tls credentials
+  const privateKey = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/privkey.pem', 'utf8');
+  const certificate = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/cert.pem', 'utf8');
+  const ca = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/chain.pem', 'utf8');
+
+  const credentials = {
+    key: privateKey,
+    cert: certificate,
+    ca: ca
+  };
+
+  // use https with a trusted certificate in test and prod
+  server = https.createServer(credentials, app);
+}
 
 server.listen(port, () => {
   console.info(`== Server listening on port ${port}`);
