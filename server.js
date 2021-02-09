@@ -75,7 +75,14 @@ app.get('/api/python-ast/:code?', (req, res) => {
 // TODO: refactor this to use a class astGenerator and use oop?
 // generate png file given input python program and return "code" to access it with
 app.post('/api/python-ast', (req, res) => {
-  if (!req.body.python) {
+  let python = req.body.python;
+  let bgColor = req.body.bgColor;
+  let nodeColor = req.body.nodeColor;
+  let edgeColor = req.body.edgeColor;
+  let orientation = req.body.orientation;
+
+  // python source code is the only required parameter
+  if (!python) {
     res.status(400).send('Bad request, no data sent.');
   }
   else {
@@ -86,7 +93,23 @@ app.post('/api/python-ast', (req, res) => {
         res.status(500).send(`Error writing ${code}.py to disk.`);
       }
       else {
-        exec(`./python-ast/parse < ./python-ast-staging/${code}.py > ./python-ast-staging/${code}.gv --color dark --dir horizontal`, (err, stdout, stderr) => {
+
+        // build parse command
+        let parseCommand = `./python-ast/parse < ./python-ast-staging/${code}.py > ./python-ast-staging/${code}.gv`;
+        if (bgColor) {
+          parseCommand += ` -bg "${bgColor}"`;
+        }
+        if (nodeColor) {
+          parseCommand += ` -color "${nodeColor}"`;
+        }
+        if (edgeColor) {
+          parseCommand += ` -edges "${edgeColor}"`;
+        }
+        if (orientation) {
+          parseCommand += ` -orientation "${orientation}"`;
+        }
+
+        exec(parseCommand, (err, stdout, stderr) => {
           if (err) {
             console.error(err);
             res.status(500).send(`Error running parse on ${code}.py`);
