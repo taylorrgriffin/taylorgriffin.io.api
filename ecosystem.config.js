@@ -23,11 +23,7 @@ module.exports = {
       repo : 'https://github.com/taylorrgriffin/taylorgriffin.io.api.git',
       path : '/home/ubuntu/www/api',
       'post-deploy' : `npm install
-      && npm run-script submodules
-      && npm run-script update
-      && cd python-ast
-      && make
-      && cd ../
+      && npm run-script python-ast-install
       && pm2 reload ecosystem.config.js --env production`
     }
   }
