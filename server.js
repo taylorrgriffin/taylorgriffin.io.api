@@ -48,18 +48,8 @@ app.get('/health_check', (req, res) => {
   res.status(200).send('OK');
 });
 
-// intercept /api calls and ensure they supply valid API key
-app.use('/api', (req, res, next) => {
-  if (req.query && req.query.apiKey == apiKey) {
-    next();
-  }
-  else {
-    res.status(401).send('Invalid API key sent. See documentation for more information.');
-  }
-});
-
 // serve generated ast pngs
-app.get('/api/python-ast/:code?', (req, res) => {  
+app.get('/python-ast/:code?', (req, res) => {  
   // each generated png is labeled with a unique code
   let code = req.params.code;
 
@@ -70,6 +60,16 @@ app.get('/api/python-ast/:code?', (req, res) => {
     else {
       res.sendFile(path.resolve(path.resolve(__dirname,`./python-ast-images/${req.params.code}.png`)));
     }
+});
+
+// intercept /api calls and ensure they supply valid API key
+app.use('/api', (req, res, next) => {
+  if (req.query && req.query.apiKey == apiKey) {
+    next();
+  }
+  else {
+    res.status(401).send('Invalid API key sent. See documentation for more information.');
+  }
 });
 
 // TODO: refactor this to use a class astGenerator and use oop?
