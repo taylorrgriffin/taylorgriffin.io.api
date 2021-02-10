@@ -6,7 +6,7 @@
   "scripts": {
     "start-prod": "ENV=prod node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "python-ast-install": "cd python-ast && git submodule update --recursive --remote && git pull origin master && make"
+    "python-ast-install": "mkdir python-ast-images && mkdir python-ast-staging && cd python-ast && git submodule update --recursive --remote && git pull origin master && make"
   },
   "author": "",
   "license": "ISC",
