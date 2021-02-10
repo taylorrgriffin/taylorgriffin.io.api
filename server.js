@@ -193,5 +193,5 @@ else {
 }
 
 server.listen(port, () => {
-  console.info(`== Server listening on port ${port}`);
+  console.info(`== (${env}) Server listening on port ${port}`);
 });
