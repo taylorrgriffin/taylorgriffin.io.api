@@ -1,7 +1,7 @@
 module.exports = {
   apps : [{
     name: 'taylorgriffin.io.api',
-    script: 'start',
+    script: 'ENV=prod npm start',
     // Options reference: https://pm2.io/doc/en/runtime/reference/ecosystem-file/
     instances: 1,
     autorestart: true,
@@ -17,11 +17,12 @@ module.exports = {
   deploy : {
     production : {
       user : 'ubuntu',
+      key  : "/Users/taylorgriffin/Desktop/Code/taylorgriffinio.pem",
       host : '44.230.185.161',
       ref  : 'origin/master',
       repo : 'https://github.com/taylorrgriffin/taylorgriffin.io.api.git',
-      path : '/var/www/production',
-      'post-deploy' : 'npm install && pm2 reload ecosystem.config.js --env production'
+      path : '/home/ubuntu/www/api',
+      'post-deploy' : 'npm install && npm run-script update && pm2 reload ecosystem.config.js --env production'
     }
   }
 };
