@@ -6,7 +6,10 @@
   "scripts": {
     "start-prod": "ENV=prod node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "python-ast-install": "mkdir python-ast-images && mkdir python-ast-staging && cd python-ast && git submodule update --recursive --init && git pull origin master && make"
+    "python-ast-install": "npm run-script python-ast-dirs && npm run-script python-ast-pull",
+    "python-ast-dirs": "mkdir -p python-ast-images && mkdir -p python-ast-staging",
+    "python-ast-pull": "cd python-ast && git submodule update --recursive --init && git pull origin master",
+    "python-ast-build": "cd python-ast && make"
   },
   "author": "",
   "license": "ISC",

@@ -15,14 +15,15 @@ module.exports = {
     }
   }],
   deploy : {
-    production : {
-      user : 'ubuntu',
-      key  : "/Users/taylorgriffin/Desktop/Code/taylorgriffinio.pem",
-      host : '44.230.185.161',
-      ref  : 'origin/master',
-      repo : 'https://github.com/taylorrgriffin/taylorgriffin.io.api.git',
-      path : '/home/ubuntu/www/api',
-      'post-deploy' : `npm install && npm run-script python-ast-install && pm2 reload ecosystem.config.js --env production`
+    "production" : {
+      "user" : 'ubuntu',
+      "key"  : "taylorgriffinio.pem",
+      "host" : '44.230.185.161',
+      "ref"  : 'origin/master',
+      "repo" : 'https://github.com/taylorrgriffin/taylorgriffin.io.api.git',
+      "path" : '/home/ubuntu/www/api',
+      "pre-deploy-local" : "[ ! -f taylorgriffinio.pem ] && echo 'Failed to locate file: taylorgriffinio.pem' && exit 1",
+      "post-deploy"      : 'npm install && npm run-script python-ast-install && pm2 reload ecosystem.config.js --env production',
     }
   }
 };
