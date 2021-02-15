@@ -11,8 +11,9 @@ const { exec } = require('child_process');
 const { apiKey } = require('./secrets.json');
 
 const app = express();
-const env = process.env.ENV || "dev";
+const env = process.NODE_ENV || 'development';
 const port = process.env.PORT || 9000;
+const options = require('./config')[env];
 
 // standard middleware config
 app.use(
@@ -172,15 +173,15 @@ app.get('*', (req, res) => {
 
 // TODO: maybe turn this into a factory later?
 var server;
-if (env === "dev") {
+if (env === "development") {
   // use http in development
   server = http.createServer(app);
 }
 else {
-  // import ssl tls credentials
-  const privateKey = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/privkey.pem', 'utf8');
-  const certificate = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/cert.pem', 'utf8');
-  const ca = fs.readFileSync('/etc/letsencrypt/live/api.taylorgriffin.io/chain.pem', 'utf8');
+  // use ssl tls credentials
+  const privateKey = fs.readFileSync(options.privateKey, 'utf8');
+  const certificate = fs.readFileSync(options.certificate, 'utf8');
+  const ca = fs.readFileSync(options.certificateAuthority, 'utf8');
 
   const credentials = {
     key: privateKey,

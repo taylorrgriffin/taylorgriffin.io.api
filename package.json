@@ -4,7 +4,6 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start-prod": "ENV=prod node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "python-ast-install": "npm run-script python-ast-dirs && npm run-script python-ast-pull && npm run-script python-ast-build",
     "python-ast-dirs": "mkdir -p python-ast-images && mkdir -p python-ast-staging",
