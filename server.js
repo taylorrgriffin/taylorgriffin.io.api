@@ -11,7 +11,7 @@ const { exec } = require('child_process');
 const { apiKey } = require('./secrets.json');
 
 const app = express();
-const env = process.NODE_ENV || 'development';
+const env = process.env.NODE_ENV || 'development';
 const port = process.env.PORT || 9000;
 const options = require('./config')[env];
 
