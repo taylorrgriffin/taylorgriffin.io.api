@@ -22,7 +22,7 @@ module.exports = {
       "ref"  : 'origin/master',
       "repo" : 'https://github.com/taylorrgriffin/taylorgriffin.io.api.git',
       "path" : '/home/ubuntu/www/api',
-      "pre-deploy-local" : "[ ! -f taylorgriffinio.pem ] && echo 'Failed to locate file: taylorgriffinio.pem' && exit 1",
+      "pre-deploy-local" : "if [ ! -f taylorgriffinio.pem ]; then echo 'Failed to locate file: taylorgriffinio.pem' && exit 1; else exit 0; fi",
       "post-deploy"      : 'npm install && npm run-script python-ast-install && pm2 reload ecosystem.config.js --env production',
     }
   }
